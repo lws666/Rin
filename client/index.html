@@ -3,138 +3,143 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>我的博客小组件</title>
     <script data-cfasync="false" src="/api/config/client/bootstrap.js"></script>
     
     <style>
-      /* 全局基础样式重置，确保组件样式不崩 */
+      /* 全局基础样式 */
       body {
         margin: 0;
-        padding: 20px;
-        background-color: #f8fafc;
+        padding: 0;
+        background-color: #fafafa;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
+        flex-direction: column;
+        min-height: 100vh; /* 保证页面至少撑满屏幕高度 */
       }
 
-      /* 侧边栏/挂件组合容器：默认支持PC端并排，手机端自动垂直叠放 */
-      .widget-sidebar {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-        justify-content: center;
-        align-items: flex-start;
-        max-width: 700px;
+      /* 你的主内容区（自动撑开上方空间） */
+      #root {
+        flex: 1;
         width: 100%;
       }
 
-      /* ================= 日历组件样式 ================= */
+      /* ================= 底部挂件组合容器 ================= */
+      .bottom-widget-sidebar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        padding: 40px 20px; /* 上下留出优雅的间距 */
+        background: transparent; /* 保持和背景同色 */
+        box-sizing: border-box;
+        margin-top: auto; /* 核心：即使上面内容少，也能把组件死死推到底部 */
+      }
+
+      /* ================= 1. 日历组件样式 ================= */
       .calendar-container {
-        flex: 1;
-        min-width: 280px;
-        max-width: 320px;
+        width: 300px;
         background: #ffffff;
-        border: 1px solid #eef2f5;
+        border: 1px solid #f0f0f0;
         border-radius: 16px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.03);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.02);
         padding: 20px;
         box-sizing: border-box;
       }
       .calendar-header {
         display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
       }
-      .calendar-header h3 { margin: 0; font-size: 1.1rem; color: #1e293b; font-weight: 700; }
+      .calendar-header h3 { margin: 0; font-size: 1rem; color: #1e293b; font-weight: 700; }
       .calendar-nav button {
-        background: #f1f5f9; border: none; width: 30px; height: 30px;
-        border-radius: 50%; cursor: pointer; color: #64748b; font-size: 0.8rem;
-        transition: all 0.2s;
+        background: #f1f5f9; border: none; width: 26px; height: 26px;
+        border-radius: 50%; cursor: pointer; color: #64748b; font-size: 0.75rem;
+        display: flex; align-items: center; justify-content: center;
       }
       .calendar-nav button:hover { background: #e2e8f0; color: #0f172a; }
       .calendar-weekdays {
         display: grid; grid-template-columns: repeat(7, 1fr);
-        text-align: center; font-size: 0.8rem; color: #94a3b8;
-        font-weight: 600; margin-bottom: 10px;
+        text-align: center; font-size: 0.75rem; color: #94a3b8;
+        font-weight: 600; margin-bottom: 8px;
       }
       .calendar-days {
         display: grid; grid-template-columns: repeat(7, 1fr);
-        text-align: center; gap: 5px;
+        text-align: center; gap: 4px;
       }
       .calendar-days div {
-        font-size: 0.9rem; padding: 8px 0; color: #334155;
-        border-radius: 50%; cursor: pointer; transition: all 0.2s;
+        font-size: 0.8rem; padding: 6px 0; color: #334155;
+        border-radius: 50%; cursor: pointer;
       }
       .calendar-days div:hover:not(.empty) { background: #f8fafc; }
       .calendar-days div.today {
         background: #ff5e3a; color: #fff; font-weight: bold;
-        box-shadow: 0 4px 10px rgba(255, 94, 58, 0.4);
+        box-shadow: 0 4px 10px rgba(255, 94, 58, 0.35);
       }
       .calendar-days div.empty { cursor: default; }
 
-      /* ================= 光影时钟样式 ================= */
+      /* ================= 2. 光影时钟样式 ================= */
       .shadow-clock-box {
-        flex: 1;
-        min-width: 280px;
-        max-width: 320px;
-        background: #f0f3f6;
-        padding: 30px;
+        width: 300px;   
+        height: 256px;  
+        background: #f0f3f6; 
         border-radius: 16px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.02);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.02);
         display: flex; justify-content: center; align-items: center;
         box-sizing: border-box;
       }
       .shadow-clock {
         position: relative;
-        width: 180px; height: 180px;
+        width: 170px; height: 170px; 
         background: #f0f3f6;
         border-radius: 50%;
-        box-shadow: 10px 10px 20px #beccd7, -10px -10px 20px #ffffff;
+        box-shadow: 9px 9px 16px #beccd7, -9px -9px 16px #ffffff;
+        box-sizing: border-box;
       }
       .notch { position: absolute; background: #c2cfda; }
-      .n12, .n6 { width: 2px; height: 8px; left: 50%; margin-left: -1px; }
+      .n12, .n6 { width: 2px; height: 6px; left: 50%; margin-left: -1px; }
       .n12 { top: 6px; } .n6 { bottom: 6px; }
-      .n3, .n9 { width: 8px; height: 2px; top: 50%; margin-top: -1px; }
+      .n3, .n9 { width: 6px; height: 2px; top: 50%; margin-top: -1px; }
       .n3 { right: 6px; } .n9 { left: 6px; }
+      
       .shadow-hand {
         position: absolute; bottom: 50%; left: 50%;
-        transform-origin: bottom; border-radius: 10px;
+        transform-origin: 50% 100%; border-radius: 10px;
       }
       .sh-hour {
-        width: 10px; height: 45px; margin-left: -5px;
-        box-shadow: 6px 6px 10px rgba(166, 185, 200, 0.4);
+        width: 8px; height: 40px; margin-left: -4px;
+        box-shadow: 5px 5px 8px rgba(166, 185, 200, 0.4);
       }
       .sh-min {
-        width: 6px; height: 65px; margin-left: -3px;
-        box-shadow: 4px 4px 8px rgba(166, 185, 200, 0.35);
+        width: 5px; height: 58px; margin-left: -2.5px;
+        box-shadow: 4px 4px 6px rgba(166, 185, 200, 0.35);
       }
       .gold-needle {
         position: absolute; bottom: 50%; left: 50%;
-        width: 2px; height: 72px; background: #cca43b;
-        margin-left: -1px; transform-origin: bottom;
+        width: 2px; height: 65px; background: #cca43b;
+        margin-left: -1px; transform-origin: 50% 100%;
         z-index: 10; border-radius: 2px;
       }
       .center-cap {
         position: absolute; top: 50%; left: 50%;
         transform: translate(-50%, -50%);
-        width: 10px; height: 10px; background: #cca43b;
+        width: 8px; height: 8px; background: #cca43b;
         border-radius: 50%; z-index: 11;
-        box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
       }
     </style>
   </head>
   <body>
-    <!-- React 挂载根节点 -->
+    
+    <!-- 1. 你的主内容区（保持在最上方） -->
     <div id="root"></div>
 
-    <!-- 侧边栏挂件组合容器 -->
-    <div class="widget-sidebar">
+    <!-- 2. 底部挂件组合区域（已移至主体内容下方） -->
+    <div class="bottom-widget-sidebar">
       
-      <!-- 1. 日历组件 -->
+      <!-- 日历 -->
       <div class="calendar-container">
         <div class="calendar-header">
-          <h3 id="calendarMonthYear">June 2026</h3>
+          <h3 id="calendarMonthYear"></h3>
           <div class="calendar-nav">
             <button onclick="changeMonth(-1)">❮</button>
             <button onclick="changeMonth(1)">❯</button>
@@ -146,7 +151,7 @@
         <div class="calendar-days" id="calendarDays"></div>
       </div>
 
-      <!-- 2. 艺术光影时钟 -->
+      <!-- 时钟 -->
       <div class="shadow-clock-box">
         <div class="shadow-clock">
           <div class="notch n12"></div><div class="notch n3"></div>
@@ -162,13 +167,14 @@
 
     </div>
 
-    <!-- =============== 脚本处理区域 =============== -->
+    <!-- 3. 第三方音乐播放器等脚本 -->
     <script type="module" src="/src/main.tsx"></script>
     <script type="text/javascript" src="https://myhkw.cn/player/js/jquery.min.js"></script>
     <script type="text/javascript" id="myhk" src="https://myhkw.cn/api/player/177936260120" key="177936260120" m="1"></script>
 
+    <!-- 4. 日历与时钟的运行逻辑 -->
     <script>
-      // 日历逻辑
+      // 日历引擎
       let currentDate = new Date();
       function renderCalendar() {
         const year = currentDate.getFullYear();
@@ -204,7 +210,7 @@
       }
       renderCalendar();
 
-      // 时钟逻辑
+      // 时钟引擎
       function updateShadowClock() {
         const now = new Date();
         const secs = now.getSeconds();
@@ -215,7 +221,6 @@
         const minDeg = (mins / 60) * 360 + (secs / 60) * 6;
         const hrDeg = ((hrs % 12) / 12) * 360 + (mins / 60) * 30;
 
-        // 加了保护防止元素还未加载时报错
         const sHand = document.getElementById('shadowSec');
         const mHand = document.getElementById('shadowMin');
         const hHand = document.getElementById('shadowHour');
