@@ -3,12 +3,230 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>我的博客小组件</title>
     <script data-cfasync="false" src="/api/config/client/bootstrap.js"></script>
+    
+    <style>
+      /* 全局基础样式重置，确保组件样式不崩 */
+      body {
+        margin: 0;
+        padding: 20px;
+        background-color: #f8fafc;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+
+      /* 侧边栏/挂件组合容器：默认支持PC端并排，手机端自动垂直叠放 */
+      .widget-sidebar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+        align-items: flex-start;
+        max-width: 700px;
+        width: 100%;
+      }
+
+      /* ================= 日历组件样式 ================= */
+      .calendar-container {
+        flex: 1;
+        min-width: 280px;
+        max-width: 320px;
+        background: #ffffff;
+        border: 1px solid #eef2f5;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.03);
+        padding: 20px;
+        box-sizing: border-box;
+      }
+      .calendar-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 20px;
+      }
+      .calendar-header h3 { margin: 0; font-size: 1.1rem; color: #1e293b; font-weight: 700; }
+      .calendar-nav button {
+        background: #f1f5f9; border: none; width: 30px; height: 30px;
+        border-radius: 50%; cursor: pointer; color: #64748b; font-size: 0.8rem;
+        transition: all 0.2s;
+      }
+      .calendar-nav button:hover { background: #e2e8f0; color: #0f172a; }
+      .calendar-weekdays {
+        display: grid; grid-template-columns: repeat(7, 1fr);
+        text-align: center; font-size: 0.8rem; color: #94a3b8;
+        font-weight: 600; margin-bottom: 10px;
+      }
+      .calendar-days {
+        display: grid; grid-template-columns: repeat(7, 1fr);
+        text-align: center; gap: 5px;
+      }
+      .calendar-days div {
+        font-size: 0.9rem; padding: 8px 0; color: #334155;
+        border-radius: 50%; cursor: pointer; transition: all 0.2s;
+      }
+      .calendar-days div:hover:not(.empty) { background: #f8fafc; }
+      .calendar-days div.today {
+        background: #ff5e3a; color: #fff; font-weight: bold;
+        box-shadow: 0 4px 10px rgba(255, 94, 58, 0.4);
+      }
+      .calendar-days div.empty { cursor: default; }
+
+      /* ================= 光影时钟样式 ================= */
+      .shadow-clock-box {
+        flex: 1;
+        min-width: 280px;
+        max-width: 320px;
+        background: #f0f3f6;
+        padding: 30px;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.02);
+        display: flex; justify-content: center; align-items: center;
+        box-sizing: border-box;
+      }
+      .shadow-clock {
+        position: relative;
+        width: 180px; height: 180px;
+        background: #f0f3f6;
+        border-radius: 50%;
+        box-shadow: 10px 10px 20px #beccd7, -10px -10px 20px #ffffff;
+      }
+      .notch { position: absolute; background: #c2cfda; }
+      .n12, .n6 { width: 2px; height: 8px; left: 50%; margin-left: -1px; }
+      .n12 { top: 6px; } .n6 { bottom: 6px; }
+      .n3, .n9 { width: 8px; height: 2px; top: 50%; margin-top: -1px; }
+      .n3 { right: 6px; } .n9 { left: 6px; }
+      .shadow-hand {
+        position: absolute; bottom: 50%; left: 50%;
+        transform-origin: bottom; border-radius: 10px;
+      }
+      .sh-hour {
+        width: 10px; height: 45px; margin-left: -5px;
+        box-shadow: 6px 6px 10px rgba(166, 185, 200, 0.4);
+      }
+      .sh-min {
+        width: 6px; height: 65px; margin-left: -3px;
+        box-shadow: 4px 4px 8px rgba(166, 185, 200, 0.35);
+      }
+      .gold-needle {
+        position: absolute; bottom: 50%; left: 50%;
+        width: 2px; height: 72px; background: #cca43b;
+        margin-left: -1px; transform-origin: bottom;
+        z-index: 10; border-radius: 2px;
+      }
+      .center-cap {
+        position: absolute; top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 10px; height: 10px; background: #cca43b;
+        border-radius: 50%; z-index: 11;
+        box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+      }
+    </style>
   </head>
   <body>
+    <!-- React 挂载根节点 -->
     <div id="root"></div>
+
+    <!-- 侧边栏挂件组合容器 -->
+    <div class="widget-sidebar">
+      
+      <!-- 1. 日历组件 -->
+      <div class="calendar-container">
+        <div class="calendar-header">
+          <h3 id="calendarMonthYear">June 2026</h3>
+          <div class="calendar-nav">
+            <button onclick="changeMonth(-1)">❮</button>
+            <button onclick="changeMonth(1)">❯</button>
+          </div>
+        </div>
+        <div class="calendar-weekdays">
+          <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+        </div>
+        <div class="calendar-days" id="calendarDays"></div>
+      </div>
+
+      <!-- 2. 艺术光影时钟 -->
+      <div class="shadow-clock-box">
+        <div class="shadow-clock">
+          <div class="notch n12"></div><div class="notch n3"></div>
+          <div class="notch n6"></div><div class="notch n9"></div>
+          
+          <div class="shadow-hand sh-hour" id="shadowHour"></div>
+          <div class="shadow-hand sh-min" id="shadowMin"></div>
+          <div class="gold-needle" id="shadowSec"></div>
+          
+          <div class="center-cap"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- =============== 脚本处理区域 =============== -->
     <script type="module" src="/src/main.tsx"></script>
     <script type="text/javascript" src="https://myhkw.cn/player/js/jquery.min.js"></script>
     <script type="text/javascript" id="myhk" src="https://myhkw.cn/api/player/177936260120" key="177936260120" m="1"></script>
+
+    <script>
+      // 日历逻辑
+      let currentDate = new Date();
+      function renderCalendar() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const monthNames = ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"];
+        document.getElementById("calendarMonthYear").innerText = `${year}年 ${monthNames[month]}`;
+        
+        const daysContainer = document.getElementById("calendarDays");
+        daysContainer.innerHTML = "";
+        
+        const firstDayIndex = new Date(year, month, 1).getDay();
+        const totalDays = new Date(year, month + 1, 0).getDate();
+        
+        for (let i = 0; i < firstDayIndex; i++) {
+          const emptyDiv = document.createElement("div");
+          emptyDiv.classList.add("empty");
+          daysContainer.appendChild(emptyDiv);
+        }
+        
+        const today = new Date();
+        for (let day = 1; day <= totalDays; day++) {
+          const dayDiv = document.createElement("div");
+          dayDiv.innerText = day;
+          if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+            dayDiv.classList.add("today");
+          }
+          daysContainer.appendChild(dayDiv);
+        }
+      }
+      function changeMonth(direction) {
+        currentDate.setMonth(currentDate.getMonth() + direction);
+        renderCalendar();
+      }
+      renderCalendar();
+
+      // 时钟逻辑
+      function updateShadowClock() {
+        const now = new Date();
+        const secs = now.getSeconds();
+        const mins = now.getMinutes();
+        const hrs = now.getHours();
+
+        const secDeg = (secs / 60) * 360;
+        const minDeg = (mins / 60) * 360 + (secs / 60) * 6;
+        const hrDeg = ((hrs % 12) / 12) * 360 + (mins / 60) * 30;
+
+        // 加了保护防止元素还未加载时报错
+        const sHand = document.getElementById('shadowSec');
+        const mHand = document.getElementById('shadowMin');
+        const hHand = document.getElementById('shadowHour');
+        
+        if(sHand) sHand.style.transform = `rotate(${secDeg}deg)`;
+        if(mHand) mHand.style.transform = `rotate(${minDeg}deg)`;
+        if(hHand) hHand.style.transform = `rotate(${hrDeg}deg)`;
+      }
+      setInterval(updateShadowClock, 500);
+      updateShadowClock();
+    </script>
   </body>
 </html>
+
